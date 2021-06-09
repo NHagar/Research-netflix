@@ -1,0 +1,7 @@
+.drake/
+.Rproj.user/
+analysis/
+data/
+literature/
+.Rhistory
+*.pdf
