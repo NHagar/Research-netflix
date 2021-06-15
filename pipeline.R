@@ -83,6 +83,6 @@ make(plan)
 vis_drake_graph(plan)
 
 readd(data) %>% 
-  filter(Date==as_date("2021-02-07") & cat=="movie" & collection==0)
+  filter(Date==as_date("2021-04-05") & cat=="tv" & collection==0)
 
 as_date("2021-03-11")
