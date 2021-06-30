@@ -24,8 +24,13 @@ load_and_clean_data <- function(fpath) {
   # Clean genre pages
   df <- df %>% 
     mutate(genre_trunk=sapply(str_split(Page, "/"), tail, 1),
-           cat=ifelse(genre_trunk=="browse", "overall", ifelse(str_length(genre_trunk)==2, "tv", "movie"))) %>% 
+           list=ifelse(genre_trunk=="browse", "overall", ifelse(str_length(genre_trunk)==2, "tv", "movie"))) %>% 
     select(-genre_trunk)
+  
+  df <- df %>% 
+    rename(c("date"=Date, "rank"=Rank, "title"=Title)) %>% 
+    filter(collection==0) %>% 
+    select(-Time, -Page, -collection)
   
   return(df)
 
