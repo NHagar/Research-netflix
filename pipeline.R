@@ -19,21 +19,18 @@ plan <- drake_plan(
     mutate(date=date(date)) %>% 
     as_tibble() %>% 
     select(-collected),
-  # JSON + CSV concatenation
-  data_all = bind_rows(data, data_json_cleaned) %>% 
-    distinct(),
   # External data check
   data_ext = load_and_clean_external(),
   # Patch any missing data
-  
+  data_all=concat_sequential(list(data, data_json_cleaned, data_ext)),  
   # Break data into lists
   subset = target(
-    data_all %>% filter(cat==type),
-    transform=map(type=c("list", "tv", "movie"), .names=c("overall", "tv", "movie"))
+    data_all %>% filter(list==type),
+    transform=map(type=c("tv", "movie"), .names=c("tv", "movie"))
   ),
   # EDA
   total_items = target(
-    n_distinct(subset$Title),
+    n_distinct(subset$title),
     transform=map(subset)
   ),
   appearances = target(
@@ -76,7 +73,7 @@ plan <- drake_plan(
       geom_tile() +
       scale_x_reverse() +
       scale_y_reverse(),
-    transform=map(mk_df, .names=c("mk_overall", "mk_tv", "mk_movie"))
+    transform=map(mk_df, .names=c("mk_tv", "mk_movie"))
   ),
   churn = target(
     daily_drops(subset),
@@ -97,42 +94,8 @@ make(plan)
 vis_drake_graph(plan)
 
 
-loadd(data)
-loadd(data_json)
-loadd(data_ext)
-
-dates <- seq(min(data$date), Sys.Date()-1, by="days")
-datecheck <- as_tibble(dates) %>% 
-  mutate(l1="movie", l2="tv") %>% 
-  rename(c("date"=value)) %>% 
-  pivot_longer(c(l1, l2), names_to="d", values_to="list") %>% 
-  select(-d)
-
-
-dataframe_step <- function(df, dates) {
-  df_sub <- df %>% 
-    filter(date %in% dates$date)
-  good <- df_sub %>% 
-    filter(list!="overall") %>% 
-    group_by(date, list) %>% 
-    summarize(ten_items=n_distinct(title)==10) %>% 
-    filter(ten_items) %>% 
-    select(-ten_items)
-  df_good <- left_join(
-    good,
-    df_sub,
-    by=c("date", "list")
-  )
-  remaining_dates <- anti_join(
-    dates,
-    good,
-    by=c("date", "list")
-  )
-  output <- list(df=df_good, dates=remaining_dates)
-  
-  return(output)
-}
-
-one <- dataframe_step(data, datecheck)
-two <- dataframe_step(data_json, one$dates)
-three <- dataframe_step(data_ext, two$dates)
+readd(tv) %>% 
+  ungroup() %>% 
+  summarize(days=n_distinct(date)) %>% 
+  pull()
+readd(data_all)

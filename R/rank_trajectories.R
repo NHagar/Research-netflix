@@ -6,10 +6,10 @@
 ##' @param subset
 rank_trajectories <- function(subset) {
   plt <- subset %>% 
-    group_by(Title) %>% 
-    arrange(Date) %>% 
-    mutate(days=Date - min(Date)) %>% 
-    ggplot(aes(days, Rank, color=Title)) + 
+    group_by(title) %>% 
+    arrange(date) %>% 
+    mutate(days=date - min(date)) %>% 
+    ggplot(aes(days, rank, color=title)) + 
     geom_line() + 
     scale_y_reverse() + 
     theme(legend.position="none")

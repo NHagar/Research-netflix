@@ -7,12 +7,12 @@
 count_appearances <- function(subset) {
   
   total_days <- subset %>% 
-    summarize(days=n_distinct(Date)) %>% 
+    summarize(days=n_distinct(date)) %>% 
     pull()
   
   hist <- subset %>% 
-    group_by(Title) %>% 
-    summarize(days=n_distinct(Date)) %>% 
+    group_by(title) %>% 
+    summarize(days=n_distinct(date)) %>% 
     mutate(days_pct=days / total_days) %>% 
     ggplot(aes(days_pct)) + 
     geom_histogram()

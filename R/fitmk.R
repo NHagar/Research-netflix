@@ -5,7 +5,7 @@
 ##' @title
 ##' @param subset
 fitmk <- function(subset) {
-  transitions <- markovchainFit(subset %>% select(-Title))
+  transitions <- markovchainFit(subset %>% select(-title))
   df_transitions <- as_tibble(transitions$estimate@transitionMatrix)
   
   df_transitions$rank <- df_transitions %>% 

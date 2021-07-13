@@ -7,17 +7,17 @@
 count_tenure <- function(subset) {
 
   total_days <- subset %>% 
-    summarize(days=n_distinct(Date)) %>% 
+    summarize(days=n_distinct(date)) %>% 
     pull()
   
   hist <- subset %>% 
-    group_by(Title) %>% 
-    arrange(Date) %>% 
-    mutate(last_day=lag(Date),
-           delta=as.integer(Date-last_day),
+    group_by(title) %>% 
+    arrange(date) %>% 
+    mutate(last_day=lag(date),
+           delta=as.integer(date-last_day),
            delta=replace_na(delta, 1),
            sequence=cumsum(delta!=1)) %>% 
-    group_by(Title, sequence) %>% 
+    group_by(title, sequence) %>% 
     summarize(length=n()) %>% 
     mutate(length_pct=length / total_days) %>% 
     ggplot(aes(length_pct)) + 

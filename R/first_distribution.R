@@ -6,11 +6,11 @@
 ##' @param subset
 first_distribution <- function(subset) {
   plt <- subset %>% 
-    filter(Date==min(Date)) %>% 
-    anti_join(subset, ., by="Title") %>% 
-    group_by(Title) %>% 
-    filter(Date==min(Date)) %>% 
-    ggplot(aes(Rank)) + 
+    filter(date==min(date)) %>% 
+    anti_join(subset, ., by="title") %>% 
+    group_by(title) %>% 
+    filter(date==min(date)) %>% 
+    ggplot(aes(rank)) + 
     geom_density()
   
   return(plt)

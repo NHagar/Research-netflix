@@ -7,11 +7,11 @@
 daily_drops <- function(subset) {
 
   plt <- subset %>% 
-    arrange(Date) %>% 
-    select(Title, Date, Rank) %>% 
-    pivot_wider(names_from=Date, values_from=Rank) %>% 
-    pivot_longer(-Title, names_to="date", values_to="rank") %>% 
-    group_by(Title) %>% 
+    arrange(date) %>% 
+    select(title, date, rank) %>% 
+    pivot_wider(names_from=date, values_from=rank) %>% 
+    pivot_longer(-title, names_to="date", values_to="rank") %>% 
+    group_by(title) %>% 
     mutate(drop=is.na(rank) & !is.na(lag(rank)),
            date=as_date(date)) %>% 
     group_by(date) %>% 

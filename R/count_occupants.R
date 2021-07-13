@@ -7,9 +7,9 @@
 count_occupants <- function(subset) {
 
   occupants <- subset %>% 
-    group_by(Rank) %>% 
-    summarize(occupants=n_distinct(Title)) %>% 
-    ggplot(aes(Rank, occupants)) + 
+    group_by(rank) %>% 
+    summarize(occupants=n_distinct(title)) %>% 
+    ggplot(aes(rank, occupants)) + 
     geom_bar(stat='identity') + 
     expand_limits(y=0)
 

@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 # %%
 base_url = "https://www.whats-on-netflix.com/most-popular/?dateselect="
-dates = [i.date().strftime("%m-%d-%Y") for i in pd.date_range("2021-01-01", "2021-06-13")]
+dates = [i.date().strftime("%m-%d-%Y") for i in pd.date_range("2021-06-13", "2021-06-29")]
 
 # %%
 all_movies = []
@@ -19,19 +19,20 @@ for i in tqdm(dates):
     r = requests.get(request_url)
     sleep(1)
     soup = BeautifulSoup(r.text, features="html.parser")
-    table = soup.find(text="United States Top 10 Movies & TV Series on Netflix").find_next("table")
-
     movies = []
     tv = []
-    for row in table.find_all("tr"):
-        cols = row.find_all("td")
-        if len(cols)>0:
-            rank = cols[0].text.strip()
-            movie = cols[1].text.strip()
-            tv_show = cols[2].text.strip()
-            movies.append({"rank": rank, "title": movie})
-            tv.append({"rank": rank, "title": tv_show})
-
+    try:
+        table = soup.find(text="United States Top 10 Movies & TV Series on Netflix").find_next("table")
+        for row in table.find_all("tr"):
+            cols = row.find_all("td")
+            if len(cols)>0:
+                rank = cols[0].text.strip()
+                movie = cols[1].text.strip()
+                tv_show = cols[2].text.strip()
+                movies.append({"rank": rank, "title": movie})
+                tv.append({"rank": rank, "title": tv_show})
+    except AttributeError:
+        continue
     if len(movies)>0:
         movie_df = pd.DataFrame(movies)
         movie_df.loc[:, "date"] = i
@@ -44,6 +45,6 @@ for i in tqdm(dates):
         all_tv.append(tv_df)
 
 # %%
-pd.concat(all_movies).to_csv("../data/batch_movies.csv")
-pd.concat(all_tv).to_csv("../data/batch_tv.csv")
+pd.concat(all_movies).to_csv("../data/batch_movies.csv", mode='a', header=False)
+pd.concat(all_tv).to_csv("../data/batch_tv.csv", mode='a', header=False)
 # %%
