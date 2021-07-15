@@ -92,10 +92,3 @@ plan <- drake_plan(
 make(plan)
 
 vis_drake_graph(plan)
-
-
-readd(tv) %>% 
-  ungroup() %>% 
-  summarize(days=n_distinct(date)) %>% 
-  pull()
-readd(data_all)
