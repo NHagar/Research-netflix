@@ -22,10 +22,18 @@ plan <- drake_plan(
   # External data check
   data_ext = load_and_clean_external(),
   # Patch any missing data
-  data_all=concat_sequential(list(data, data_json_cleaned, data_ext)),  
+  data_all = concat_sequential(list(data, data_json_cleaned, data_ext)),
+  data_all_prepro = process_titles(data_all),
+  # Export titles for later check
+  titles_out = data_all_prepro %>%
+    export_titles() %>% 
+    write_csv(file_out("./data/titles.csv")),
+  # Title resolution
+  resolve_list = read_csv(file_in("./data/resolutions.csv"), col_names=F),
+  data_all_resolved = resolve_titles(data_all_prepro, resolve_list),
   # Break data into lists
   subset = target(
-    data_all %>% filter(list==type),
+    data_all_resolved %>% filter(list==type),
     transform=map(type=c("tv", "movie"), .names=c("tv", "movie"))
   ),
   # EDA
