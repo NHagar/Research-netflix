@@ -1,8 +1,11 @@
 library(tidyverse)
+source("./R/sim_functions.R")
 
-n_movies <- 100
+set.seed(20210721)
+
+n_movies <- 500
 movies <- seq(1, n_movies)
-users <- 100000
+users <- 500000
 days <- 21
 
 # ----Random----
@@ -13,23 +16,11 @@ for (i in seq(1, days)) {
   results[i,] <- s
 }
 
-df <- as_tibble(results)
-df %>% 
-  mutate(iter=row_number()) %>% 
-  pivot_longer(-iter, names_to="index", values_to="movie") %>% 
-  select(-index) %>% 
-  group_by(iter, movie) %>% 
-  summarize(picks=n()) %>% 
-  mutate(rank=dense_rank(desc(picks))) %>% 
-  arrange(iter, rank)
+df <- transform_results(results)
+plots <- plot_results(df)
 
 # ----Popularity, fixed----
 
 
 
 # ----Popularity, variable----
-
-
-
-
-results[1,]
