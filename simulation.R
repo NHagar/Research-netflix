@@ -51,5 +51,6 @@ for (i in seq(1, days)) {
 df <- transform_results(results)
 plots <- plot_results(df)
 
-
 # ----Popularity, variable----
+
+
