@@ -54,3 +54,47 @@ plots <- plot_results(df)
 # ----Popularity, variable----
 
 
+
+# ----Results evaluation----
+df <- read_csv("./data/sim_test.csv")
+
+# Occupants
+df %>% 
+  arrange(iteration) %>% 
+  group_by(iteration) %>% 
+  mutate(rank=dense_rank(desc(selections))) %>% 
+  filter(rank<=10) %>% 
+  group_by(rank) %>% 
+  summarize(movies=n_distinct(movie)) %>% 
+  ggplot(aes(rank, movies)) + 
+  geom_bar(stat="identity")
+  
+# Swaps
+df %>% 
+  group_by(iteration) %>% 
+  mutate(rank=dense_rank(desc(selections))) %>% 
+  filter(rank<=10) %>% 
+  ungroup() %>% 
+  arrange(iteration) %>% 
+  group_by(rank) %>% 
+  mutate(last=lag(movie)) %>% 
+  ungroup() %>% 
+  mutate(swap=rank==last) %>% 
+  group_by(rank) %>% 
+  summarize(swaps=sum(swap, na.rm=T)) %>% 
+  ggplot(aes(rank, swaps)) + 
+  geom_bar(stat='identity')
+
+# Churn
+df %>% 
+  group_by(iteration) %>% 
+  mutate(rank=dense_rank(desc(selections))) %>% 
+  filter(rank<=10) %>% 
+  group_by(movie) %>% 
+  arrange(iteration) %>% 
+  mutate(delta=iteration-lag(iteration),
+         dropped=delta!=1 | is.na(delta)) %>% 
+  group_by(iteration) %>% 
+  summarize(turnover=sum(dropped)) %>% 
+  ggplot(aes(iteration, turnover)) + 
+  geom_line()

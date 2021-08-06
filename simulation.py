@@ -3,6 +3,7 @@ import random
 from typing import List
 
 import scipy.stats as stats
+from tqdm import tqdm
 
 @dataclass
 class User:
@@ -16,6 +17,12 @@ class Movie:
     pref: float
     pop: float
     selections: int = 0
+
+    def __eq__(self, other):
+        return self.id == other.id
+    
+    def __hash__(self):
+        return hash(self.id)
 
     def reset_selections(self):
         self.selections = 0
@@ -37,7 +44,7 @@ class Simulation:
     def _item_selections(self):
         for user in self.users:
             # Get items not in user memory
-            movies_unseen = [i for i in self.movies if i.id not in user.memory]
+            movies_unseen = list(set(self.movies) - set(user.memory))
             # Check for global/local influence
             influence = random.random() > self.pop_param
             if influence:
@@ -48,7 +55,7 @@ class Simulation:
                 # Closest preference value
                 selected_movie = min(movies_unseen, key=lambda x: abs(x.pref - user.pref))
             # Store selection to user memory
-            user.memory.append(selected_movie.id)
+            user.memory.append(selected_movie)
             # Record movie selection
             selected_movie.selections += 1
 
@@ -80,20 +87,9 @@ class Simulation:
             movie.reset_selections()
 
     def run_simulation(self):
-        for i in range(0, self.iterations):
+        for i in tqdm(range(0, self.iterations)):
             self.it = i
             self._item_selections()
             self._record_results()
             self._end_iteration()
-
-
-s = Simulation(movie_count=30, 
-               user_count=5, 
-               iterations=5, 
-               pop_param=0.6, 
-               pl_param=5)
-
-s.init_simulation()
-s.run_simulation()
-print(s.results)
 
