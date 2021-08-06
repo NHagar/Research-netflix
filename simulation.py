@@ -27,7 +27,7 @@ class Simulation:
     iterations: int
     pop_param: float
     pl_param: float
-    results: field(default_factory=lambda: [])
+    results: List = field(default_factory=lambda: [])
         
     def _gen_popularity_distribution(self):
         dist = 1 - stats.powerlaw.rvs(self.pl_param, size=self.movie_count)
@@ -37,18 +37,18 @@ class Simulation:
     def _item_selections(self):
         for user in self.users:
             # Get items not in user memory
-            movies_unseen = set(self.movies) - set(user.memory)
+            movies_unseen = [i for i in self.movies if i.id not in user.memory]
             # Check for global/local influence
             influence = random.random() > self.pop_param
             if influence:
                 # Weighted popularity draw
                 weights = [i.pop for i in movies_unseen]
-                selected_movie = random.choice(movies_unseen, weights, k=1)
+                selected_movie = random.choices(movies_unseen, weights, k=1)[0]
             else:
                 # Closest preference value
                 selected_movie = min(movies_unseen, key=lambda x: abs(x.pref - user.pref))
             # Store selection to user memory
-            user.memory.append(selected_movie)
+            user.memory.append(selected_movie.id)
             # Record movie selection
             selected_movie.selections += 1
 
@@ -87,11 +87,13 @@ class Simulation:
             self._end_iteration()
 
 
-s = Simulation(movie_count=100, 
-               user_count=300, 
+s = Simulation(movie_count=30, 
+               user_count=5, 
                iterations=5, 
                pop_param=0.6, 
                pl_param=5)
 
-print(s.movies)
-print(s.users)
+s.init_simulation()
+s.run_simulation()
+print(s.results)
+
