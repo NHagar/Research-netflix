@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+import random
 from typing import List
 
 import scipy.stats as stats
@@ -14,7 +15,6 @@ class Movie:
     id: int
     pref: float
     pop: float
-    ranks: List = field(default_factory=lambda: [])
     selections: int = 0
 
     def reset_selections(self):
@@ -22,48 +22,69 @@ class Movie:
 
 @dataclass
 class Simulation:
-    def __init__(self,
-                 movie_count: int,
-                 user_count: int,
-                 iterations: int,
-                 pop_param: float,
-                 pl_param: float):
-        self.movie_count = movie_count
-        self.user_count = user_count
-        self.iterations = iterations
-        self.pop_param = pop_param
-        self.pl_param = pl_param
-
-        # init preference distribution
-        user_prefs = stats.uniform.rvs(size=user_count)
-        movie_prefs = stats.uniform.rvs(size=movie_count)
-        # init popularity distribution
-        pop = self._gen_popularity_distribution()
-
-        self.movies = [Movie(id=i, pref=movie_prefs[i], pop=pop[i]) for i in range(0, self.movie_count)]
-        self.users = [User(i, pref=user_prefs[i]) for i in range(0, self.user_count)]        
+    movie_count: int
+    user_count: int
+    iterations: int
+    pop_param: float
+    pl_param: float
+    results: field(default_factory=lambda: [])
         
     def _gen_popularity_distribution(self):
         dist = 1 - stats.powerlaw.rvs(self.pl_param, size=self.movie_count)
+        dist = sorted(dist)
         return dist
 
-    def _rank_movies(self):
-        ""
-        # For each user
-        # Remove movies in memory
-        # Weighted coin flip
-        # If global
-            # Weighted draw based on pop
-        # If local
-            # Closest pref value
-        # Store selection in user memory
-        # Iterate movie counter
+    def _item_selections(self):
+        for user in self.users:
+            # Get items not in user memory
+            movies_unseen = set(self.movies) - set(user.memory)
+            # Check for global/local influence
+            influence = random.random() > self.pop_param
+            if influence:
+                # Weighted popularity draw
+                weights = [i.pop for i in movies_unseen]
+                selected_movie = random.choice(movies_unseen, weights, k=1)
+            else:
+                # Closest preference value
+                selected_movie = min(movies_unseen, key=lambda x: abs(x.pref - user.pref))
+            # Store selection to user memory
+            user.memory.append(selected_movie)
+            # Record movie selection
+            selected_movie.selections += 1
 
-    def _select_items(self):
-        ""
+    def _record_results(self):
+        # Save selection count for each item
+        for movie in self.movies:
+            result = {"movie": movie.id, "selections": movie.selections, "iteration": self.it}
+            self.results.append(result)
 
-    def run_iteration(self):
-        ""
+    def init_simulation(self):
+        # init preference distribution
+        user_prefs = stats.uniform.rvs(size=self.user_count)
+        movie_prefs = stats.uniform.rvs(size=self.movie_count)
+        # init popularity distribution
+        pop = self._gen_popularity_distribution()
+
+        # init agents, items
+        self.movies = [Movie(id=i, pref=movie_prefs[i], pop=pop[i]) for i in range(0, self.movie_count)]
+        self.users = [User(i, pref=user_prefs[i]) for i in range(0, self.user_count)]
+
+    def _end_iteration(self):
+        # Set new popularity distribution
+        pop = self._gen_popularity_distribution()
+        self.movies = sorted(self.movies, key=lambda x: x.selections)
+        for i in range(0, self.movie_count):
+            self.movies[i].pop = pop[i]
+        # Zero out selections
+        for movie in self.movies:
+            movie.reset_selections()
+
+    def run_simulation(self):
+        for i in range(0, self.iterations):
+            self.it = i
+            self._item_selections()
+            self._record_results()
+            self._end_iteration()
 
 
 s = Simulation(movie_count=100, 
