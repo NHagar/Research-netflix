@@ -1,17 +1,27 @@
 # %%
 import numpy as np
-import scipy.stats as stats
+from scipy import stats
 
 # %%
-n_movies = 1_000
-n_users = 100
-
+n_users = 1000
+n_movies = 100
+n_days = 30
+pop_val = 0.5
 # %%
-movies = np.sort(stats.uniform.rvs(size=n_movies)).reshape((1,n_movies))
-users = np.sort(stats.uniform.rvs(size=100)).reshape((n_users, 1))
+users = stats.uniform.rvs(size=n_users)
+movies = stats.uniform.rvs(size=n_movies)
 # %%
-distances = abs(users - movies)
-
+choices = stats.binom.rvs(1, 1-pop_val, size=n_days)==1
+u = users[0]
+local = np.count_nonzero(choices==0)
 # %%
-[i for i in enumerate(distances[0])]
+local_choices = []
+dist = abs(movies - u)
+for i in range(local):
+    local_choices.append(dist.argmin())
+    dist = np.delete(dist, dist.argmin())
+# %%
+local_choices
+# %%
+choices
 # %%
