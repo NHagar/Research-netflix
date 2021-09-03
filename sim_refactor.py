@@ -11,7 +11,7 @@ pop_val = 0.5
 users = stats.uniform.rvs(size=n_users)
 movies = stats.uniform.rvs(size=n_movies)
 # %%
-choices = stats.binom.rvs(1, 1-pop_val, size=n_days)==1
+choices = ((stats.binom.rvs(1, 1-pop_val, size=n_days)==1)).astype("object")
 u = users[0]
 local = np.count_nonzero(choices==0)
 # %%
@@ -21,7 +21,6 @@ for i in range(local):
     local_choices.append(dist.argmin())
     dist = np.delete(dist, dist.argmin())
 # %%
-local_choices
+choices[choices==False] = np.array(local_choices)
 # %%
 choices
-# %%
