@@ -4,10 +4,11 @@ from scipy import stats
 
 from tqdm import tqdm
 # %%
-n_users = 200_000_000
+n_users = 1_000
 n_movies = 100
 n_days = 30
 pop_val = 0.5
+pl_val = 1.5
 # %%
 users = stats.uniform.rvs(size=n_users)
 movies = stats.uniform.rvs(size=n_movies)
@@ -23,6 +24,11 @@ def make_local_choices(user, items, local_count):
     
     return local_choices
 
+def pl_percent(p, n):
+    pl = stats.powerlaw.rvs(p, size=n)
+    pcts = [i/sum(pl) for i in pl]
+
+    return pcts
 
 # %%
 for u in tqdm(users):
@@ -39,3 +45,10 @@ for u in tqdm(users):
             tallies[i][k] = 1
 
 # %%
+init_pl = pl_percent(pl_val, n_movies)
+
+# %%
+# Init power law distribution (converted to % chance)
+# Run n draws, n = number of gaps
+# Update counts
+# Create next power law distribution based on updated counts 
