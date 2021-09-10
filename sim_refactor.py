@@ -56,6 +56,13 @@ for it in range(n_days):
     gaps = results.loc[it, "gap"]
     if it > 0:
         p_notselected = 1 - (results[results.index<it].sum() / n_users)
+        p_notselected = p_notselected[p_notselected.index!="gap"].rename("adjustment")
+        it_selections = results.iloc[it].fillna(0).sort_values()
+        it_selections = it_selections[it_selections.index!="gap"].rename("selections")
+        pl_values = pd.DataFrame({"pl": pl}, index=it_selections.index)
+        pl_df = pd.merge(pl_values, p_notselected, left_index=True, right_index=True)
+        pl_df.loc[:, "adjusted"] = pl_df.pl * pl_df.adjustment
+
 
 #    init = list(zip([i[0] for i in enumerate(movies)], pl))
 #    new_choices = np.random.choice([i[0] for i in init], gaps, p=[i[1] for i in init])
@@ -79,7 +86,18 @@ df[df.index<20][38].sum()
 # %%
 pl
 # %%
-it = results.iloc[1]
+it_selections = results.iloc[10].fillna(0).sort_values()
+
 # %%
-it[it.index!=True].index
+it_selections = it_selections[it_selections.index!="gap"]
+# %%
+# %%
+
+# %%
+type(p_notselected)
+# %%
+pl_df = pd.merge(pl_values, p_notselected, left_index=True, right_index=True)
+pl_df.loc[:, "adjusted"] = pl_df.pl * pl_df.adjustment
+# %%
+np.random.choice(pl_df.index, 10, p=pl_df.adjusted)
 # %%
