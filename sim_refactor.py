@@ -1,4 +1,7 @@
 # %%
+import collections
+import random
+
 import numpy as np
 import pandas as pd
 from scipy import stats
@@ -6,23 +9,12 @@ from scipy import stats
 from tqdm import tqdm
 
 # %%
-def make_local_choices(user, items, local_count):
-    """Calculate user-level choices based on item distance"""
-    local_choices = []
-    # Calculate distance between item and user values
-    dist = abs(items - user)
-    for _ in range(local_count):
-        # Get the index of the closest item
-        local_choices.append(dist.argmin())
-        # Delete chosen item
-        dist = np.delete(dist, dist.argmin())
-    
-    return local_choices
-
 def pl_percent(p, n):
     """Convert power law values to percentages (probabilities)"""
     pl = stats.powerlaw.rvs(p, size=n)
-    pcts = sorted([i/sum(pl) for i in pl])
+    pcts = [i/sum(pl) for i in pl]
+    random.shuffle(pcts)
+    pcts = list(enumerate(pcts))
 
     return pcts
 
@@ -31,81 +23,72 @@ def pl_percent(p, n):
 n_users = 1_000
 n_movies = 100
 n_days = 30
-pop_val = 0.5
+pop_val = 0.6
 pl_val = 1.5
 
-# Initialize agents, items, and selection counts
+
+# %%
+# Binary mask matrix - 0/1 for local/global
+# Chunk and fill in
+# %%
 users = stats.uniform.rvs(size=n_users)
 movies = stats.uniform.rvs(size=n_movies)
-tallies = [dict() for _ in range(n_days)]
 
 # %%
-# For each user
-for u in tqdm(users):
-    # Determine which choices will be local/global
-    choices = ((stats.binom.rvs(1, 1-pop_val, size=n_days)==1)).astype("object")
-    # Mask global, local choices
-    choices[choices==True] = "gap"
-    local = np.count_nonzero(choices==0)
-    # Make local choices
-    local_choices = make_local_choices(u, movies, local)
-    # Fill in local choices
-    choices[choices==False] = np.array(local_choices)
-    # Tally up selections of each item
-    for i in range(n_days):
-        k = choices[i]
-        if k in tallies[i]:
-            tallies[i][k] += 1
-        else:
-            tallies[i][k] = 1
-# Make result dataframe
-results = pd.DataFrame(tallies)
+results = np.empty((n_users, n_days), dtype=np.uint16)
+
+init = np.empty((n_users, n_days), dtype=bool)
+for i in tqdm(range(0, n_days)):
+    choices = stats.binom.rvs(1, pop_val, size=n_users)==1
+    init[:,i] = choices
 
 # %%
-# Init power law values
+for i in tqdm(range(0, n_users)):
+    c = n_days - np.count_nonzero(init[i, :])
+    # Add 1 to avoid collisions w/unfilled 0s
+    cut = abs(users[i] - movies).argsort()[:c] + 1
+
+    f = np.argwhere(init[i, :]==False).astype(np.uint32)
+    f = f.reshape((f.shape[0],))
+
+    results[i, f] = cut
+
+# %%
 pl = pl_percent(pl_val, n_movies)
-# For each day
-for it in range(n_days):
-    # Count missing values for current day
-    gaps = results.loc[it, "gap"]
-    # If after the first iteration
-    if it > 0:
-        # TODO: This needs to follow a Bayesian approach
-        # of updating selection probabilities through a 
-        # combination of power law values and available user pool
+
+for i in tqdm(range(0, n_days)):
+    empty = np.argwhere(results[:, i]==0).astype(np.uint32)
+    empty = empty.reshape((empty.shape[0],))
+    if i==0:
+        # Add 1 to remain consistent with other correction
+        options = [i[0] + 1 for i in pl]
+        weights = [i[1] for i in pl]
+        choices = np.random.choice(options, size=len(empty), p=weights)
+    else:
         ""
+    results[empty, i] = choices
+    # Update ranking
 
 # %%
-#- Init power law distribution (converted to % chance)
-#- Assign to items
-# Adjust based on prior selections
-#- Run n draws, n = number of gaps
-# Update counts
-# Create next power law distribution based on updated counts 
-
+len(init)
 # %%
-
+init.shape[1]
 # %%
-df = pd.DataFrame(tallies)
+np.argwhere(results[:, 1]==0).astype(np.uint32)
 # %%
-df[df.index<20][38].sum()
+e.reshape((e.shape[1],))
 # %%
-
+np.random.choice([i[0] for i in pl], size=600, p=[i[1] for i in pl])
 # %%
-pl
+len(results[empty,0])
 # %%
-it_selections = results.iloc[10].fillna(0).sort_values()
-
+len(choices)
 # %%
-it_selections = it_selections[it_selections.index!="gap"]
+len(empty)
 # %%
+results[:,0]
 # %%
-
+r = [i[0] for i in collections.Counter(results[:,0]).most_common()]
 # %%
-type(p_notselected)
-# %%
-pl_df = pd.merge(pl_values, p_notselected, left_index=True, right_index=True)
-pl_df.loc[:, "adjusted"] = pl_df.pl * pl_df.adjustment
-# %%
-np.random.choice(pl_df.index, 10, p=pl_df.adjusted)
+list(zip(r, sorted(weights, reverse=True)))
 # %%
