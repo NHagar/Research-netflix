@@ -14,8 +14,7 @@ def pl_percent(p, n):
     pl = stats.powerlaw.rvs(p, size=n)
     pcts = [i/sum(pl) for i in pl]
     random.shuffle(pcts)
-    pcts = dict(enumerate(pcts))
-    pcts = dict(sorted(pcts.items(), key=lambda item: item[1]))
+    pcts = np.array(list(enumerate(pcts)))
 
     return pcts
 
@@ -55,7 +54,6 @@ for i in tqdm(range(0, n_users)):
 
 # %%
 pl = pl_percent(pl_val, n_movies)
-movie_indices = [i + 1 for i in pl.keys()]
 
 # %%
 for i in tqdm(range(0, n_days)):
@@ -63,27 +61,23 @@ for i in tqdm(range(0, n_days)):
     empty = empty.reshape((empty.shape[0],))
     if i==0:
         # Add 1 to remain consistent with other correction
-        options = movie_indices
-        weights = np.fromiter(pl.values(), dtype=float)
+        options = pl[:, 0] + 1
+        weights = pl[:, 1]
         weights /= sum(weights)
         choices = np.random.choice(options, size=len(empty), p=weights)
     else:
         choices = []
-        weights = np.fromiter(pl.values(), dtype=float)
         # Vectorize this
         subset_empty = results[empty, :i]
-        items_expanded = np.resize(movie_indices, (len(subset_empty), len(movie_indices)))
-        weights_expanded = np.resize(weights, (len(subset_empty), len(weights)))
-        options = items_expanded[subset_empty!=items_expanded].reshape((subset_empty.shape[0], 
-                                                               items_expanded.shape[1] - subset_empty.shape[1]))
-        weights_expanded = weights_expanded[subset_empty!=items_expanded].reshape((subset_empty.shape[0], 
-                                                               weights_expanded.shape[1] - subset_empty.shape[1]))
+        items_expanded = np.tile(pl[:,0] + 1, (len(subset_empty), 1))
+        its = 0
+        for col in subset_empty.T:
+            its+=1
+            col = col.reshape((len(subset_empty), 1))
+            items_expanded = items_expanded[col!=items_expanded].reshape((len(col), len(pl) - its)).astype(int)
+        weights_expanded = pl[items_expanded - 1, 1]
         # https://stackoverflow.com/questions/47722005/vectorizing-numpy-random-choice-for-given-2d-array-of-probabilities-along-an-a
-        choice_indices = (weights_expanded.cumsum(1) > np.random.rand(weights_expanded.shape[0])[:,None]).argmax(1)
-        choices = options[np.arange(len(options)),i]
+        choices = (weights_expanded.cumsum(1) > np.random.rand(weights_expanded.shape[0])[:,None]).argmax(1) + 1
     # Assign choices
     results[empty, i] = choices
     # Update rankings
-    
-
-# %%
