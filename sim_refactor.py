@@ -69,15 +69,19 @@ for i in tqdm(range(0, n_days)):
         choices = []
         # Vectorize this
         subset_empty = results[empty, :i]
-        items_expanded = np.tile(pl[:,0] + 1, (len(subset_empty), 1))
+        items_expanded = np.tile(pl[:,0] + 1, (len(subset_empty), 1)).astype(np.uint16)
         its = 0
         for col in subset_empty.T:
             its+=1
             col = col.reshape((len(subset_empty), 1))
-            items_expanded = items_expanded[col!=items_expanded].reshape((len(col), len(pl) - its)).astype(int)
-        weights_expanded = pl[items_expanded - 1, 1]
+            items_expanded = items_expanded[col!=items_expanded].reshape((len(col), n_movies - its))
+        
+        weights_expanded = pl[items_expanded - 1]
         # https://stackoverflow.com/questions/47722005/vectorizing-numpy-random-choice-for-given-2d-array-of-probabilities-along-an-a
-        choices = (weights_expanded.cumsum(1) > np.random.rand(weights_expanded.shape[0])[:,None]).argmax(1) + 1
+        choice_indices = (weights_expanded.cumsum(1)[:,:,1] > np.random.rand(weights_expanded.shape[0])[:,None]).argmax(1)
+        choices = weights_expanded[range(len(weights_expanded)), choice_indices, 0]
     # Assign choices
     results[empty, i] = choices
     # Update rankings
+
+# PL draw before local causes collisions

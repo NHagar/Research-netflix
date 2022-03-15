@@ -1,10 +1,5 @@
 __pycache__/
-.drake/
-.Rproj.user/
 .vscode/
-analysis/
-data/
-literature/
-.Rhistory
-*.pdf
+old/
+presentation/
 scratch.py
