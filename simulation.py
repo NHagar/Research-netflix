@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 import random
 from typing import List
 
+import pandas as pd
 import scipy.stats as stats
 from tqdm import tqdm
 
@@ -86,10 +87,22 @@ class Simulation:
         for movie in self.movies:
             movie.reset_selections()
 
+    def _calculate_churn(self, top_ten):
+        weeks = top_ten.sort_values(by='iteration').iteration.drop_duplicates().tolist()
+        weeks_pairs = list(zip(weeks, weeks[1:]))
+        churn = []
+        for w in weeks_pairs:
+            turnover = len(set(top_ten[top_ten.iteration==w[0]].movie) - set(top_ten[top_ten.iteration==w[1]].movie))
+            churn.append(turnover)
+        return sum(churn) / len(churn)
+
     def run_simulation(self):
         for i in tqdm(range(0, self.iterations)):
             self.it = i
             self._item_selections()
             self._record_results()
             self._end_iteration()
-
+        results = pd.DataFrame(self.results)
+        top_ten = results.sort_values(by=['iteration', 'selections'], ascending=False).groupby("iteration").head(10)
+        top_ten['rank'] = top_ten.groupby('iteration').cumcount()+1
+        self.top_ten = top_ten
