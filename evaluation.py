@@ -14,10 +14,14 @@ def churn(data: pd.DataFrame,
           item_col: str,
           iter_col: str) -> list[int]:
     """generates distribution of WoW churn"""
+    weeks = data.sort_values(by=iter_col)[iter_col].drop_duplicates().tolist()
+    weeks_pairs = list(zip(weeks, weeks[1:]))
+    churn = []
+    for w in weeks_pairs:
+        turnover = len(set(data[data[iter_col]==w[0]][item_col]) - set(data[data[iter_col]==w[1]][item_col]))
+        churn.append(turnover)
 
-
-
-    return distribution
+    return churn
 
 def movement_prob(data):
     """generates distribution of movement probabilities
