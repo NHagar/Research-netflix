@@ -1,4 +1,6 @@
+import numpy as np
 import pandas as pd
+from statsmodels.graphics.gofplots import qqplot_2samples
 
 def compare_ranks(r, rank_col):
     if r['next_rank'] != r['next_rank']:
@@ -53,5 +55,8 @@ def movement_prob(data: pd.DataFrame,
 
 def compare_distributions(dist_1, dist_2):
     """generates fit measure for distribution"""
-
-    return fit
+    if type(dist_1) == list:
+        return qqplot_2samples(np.array(dist_1), np.array(dist_2))
+    else:
+        joined = dist_1.join(dist_2, how='outer').fillna(0)
+        return qqplot_2samples(joined.values[:,0], joined.values[:,1])
