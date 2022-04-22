@@ -47,7 +47,9 @@ def movement_prob(data: pd.DataFrame,
         .pivot_table(index=rank_col, columns='transition', values=iter_col)\
         .fillna(0))
 
-    return counts
+    pcts = counts.apply(lambda x: x / x.sum(), axis=1)
+
+    return pcts
 
 def compare_distributions(dist_1, dist_2):
     """generates fit measure for distribution"""
