@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from scipy.spatial.distance import jensenshannon
+from scipy.stats import kstest
 from statsmodels.graphics.gofplots import qqplot_2samples
 
 def compare_ranks(r, rank_col):
@@ -57,7 +58,7 @@ def movement_prob(data: pd.DataFrame,
 def compare_distributions(dist_1, dist_2):
     """generates fit measure for distribution"""
     if type(dist_1) == list:
-        return qqplot_2samples(np.array(dist_1), np.array(dist_2))
+        return kstest(np.array(dist_1), np.array(dist_2))
     elif "decrease" in dist_1.columns:
         results = []
         for i in range(1, 11):
@@ -68,4 +69,4 @@ def compare_distributions(dist_1, dist_2):
         return sum(results) / len(results)
     else:
         joined = dist_1.join(dist_2, how='outer').fillna(0)
-        return qqplot_2samples(joined.values[:,0], joined.values[:,1])
+        return kstest(joined.values[:,0], joined.values[:,1])
