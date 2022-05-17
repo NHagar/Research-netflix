@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 from scipy.spatial.distance import jensenshannon
 from scipy.stats import kstest
-from statsmodels.graphics.gofplots import qqplot_2samples
 
 def compare_ranks(r, rank_col):
     if r['next_rank'] != r['next_rank']:
