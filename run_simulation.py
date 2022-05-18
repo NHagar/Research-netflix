@@ -22,11 +22,11 @@ transitions_empirical = evaluation.movement_prob(empirical, "item_title", "week"
 # params
 parser = argparse.ArgumentParser(description="Run simulation, sweeping over parameters.")
 # pop range
-parser.add_argument("--popularity_range", type=int, nargs=2, default=[0, 1], help="Range of popularity values.")
+parser.add_argument("--popularity_range", type=float, nargs=2, default=[0, 1], help="Range of popularity values.")
 # pop step
 parser.add_argument("--popularity_step", type=float, default=0.2, help="Step size of popularity values.")
 # pl range
-parser.add_argument("--powerlaw_range", type=int, nargs=2, default=[1, 2], help="Range of power law distribution values.")
+parser.add_argument("--powerlaw_range", type=float, nargs=2, default=[1, 2], help="Range of power law distribution values.")
 # pl step
 parser.add_argument("--powerlaw_step", type=float, default=0.2, help="Step size of power law distribution values.")
 # agent count
